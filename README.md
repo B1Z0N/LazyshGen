@@ -18,7 +18,7 @@ class Loaded : ILoaded
 
 class Loader
 {
-    public ILoaded GetLoader()
+    public ILoaded Load()
     {
         Thread.Sleep(1000); // time consuming operation
         return new Loaded();
@@ -38,10 +38,13 @@ public static class Program
 }
 
 // generated
-public class LazyLoaded : Lazy<ILoaded>, ILoaded
+class LazyLoaded : Lazy<ILoaded>, ILoaded
 {
-    public int DoInt() => this.Value.DoInt();
-    public int DoVoid() => this.Value.DoVoid();
-}
+    public LazyLoaded(Func<ILoaded> val) :base(val)
+    {
+    }
 
+    public int DoInt() => this.Value.DoInt();
+    public void DoVoid() => this.Value.DoVoid();
+}
 ``` 
