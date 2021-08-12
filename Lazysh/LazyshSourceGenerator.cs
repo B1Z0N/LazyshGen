@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -29,20 +30,18 @@ namespace Lazysh {
         public void Execute(GeneratorExecutionContext context)
         {
             var namespaceName = "LazyshImplDefault";
-
             var compilation = context.Compilation;
-
             var syntaxReceiver = (LazyshSyntaxReceiver) context.SyntaxReceiver;
             var targets = syntaxReceiver.TypeDeclarationsWithAttributes;
 
             var lazyshSrc = "class LazyshAttribute : System.Attribute { }";
             context.AddSource("Lazysh.cs", lazyshSrc);
-
+            
             var options = (CSharpParseOptions) compilation.SyntaxTrees.First().Options;
             var lazyshSyntaxTree = CSharpSyntaxTree.ParseText(lazyshSrc, options);
             compilation = compilation.AddSyntaxTrees(lazyshSyntaxTree);
 
-            var logAttribute = compilation.GetTypeByMetadataName("LazyshAttribute");
+            var lazyshAttribute = compilation.GetTypeByMetadataName("LazyshAttribute");
 
             var targetTypes = new HashSet<ITypeSymbol>();
             foreach (var targetTypeSyntax in targets)
@@ -51,9 +50,9 @@ namespace Lazysh {
 
                 var semanticModel = compilation.GetSemanticModel(targetTypeSyntax.SyntaxTree);
                 var targetType = semanticModel.GetDeclaredSymbol(targetTypeSyntax);
-                var hasLogAttribute = targetType.GetAttributes()
-                    .Any(x => x.AttributeClass.Equals(logAttribute));
-                if (!hasLogAttribute)
+                var hasLazyshAttribute = targetType.GetAttributes()
+                    .Any(x => x.AttributeClass.Equals(lazyshAttribute));
+                if (!hasLazyshAttribute)
                     continue;
 
                 if (targetTypeSyntax is not InterfaceDeclarationSyntax)
@@ -83,26 +82,27 @@ namespace Lazysh {
             }
         }
 
-        private string GenerateProxy(ITypeSymbol targetType, string namespaceName)
+        private static string GenerateProxy(ITypeSymbol targetType, string namespaceName)
         {
             var allInterfaceMethods = targetType.GetMembers()
                 .OfType<IMethodSymbol>()
                 .ToList();
 
             var fullQualifiedName = GetFullQualifiedName(targetType);
-
+            
             var sb = new StringBuilder();
             var proxyName = $"Lazysh{targetType.Name.Substring(1)}";
             sb.Append($@"
 using System;
 using System.Threading;
 
-// generated
-class {proxyName} : Lazy<ILoaded>, ILoaded
-{{
-    public LazyLoaded(Func<ILoaded> val) :base(val)
+namespace {namespaceName} {{
+    // generated via LazyshSourceGenerator
+    class {proxyName} : Lazy<{fullQualifiedName}>, {fullQualifiedName}
     {{
-    }}");
+        public {proxyName}(Func<{fullQualifiedName}> val) :base(val)
+        {{
+        }}");
             
             foreach (var interfaceMethod in allInterfaceMethods)
             {
@@ -110,19 +110,16 @@ class {proxyName} : Lazy<ILoaded>, ILoaded
                 var parameters = string.Join(", ",
                     interfaceMethod.Parameters.Select(x => $"{GetFullQualifiedName(x.Type)} {x.Name}"));
                 var parametersNames = string.Join(", ", interfaceMethod.Parameters.Select(x => x.Name));
-                var argumentLog = string.Join(", ", interfaceMethod.Parameters.Select(x => $"{x.Name} = {{{x.Name}}}"));
-                var argumentList = string.Join(", ", interfaceMethod.Parameters.Select(x => x.Name));
-                var isVoid = interfaceMethod.ReturnsVoid;
                 var interfaceFullyQualifiedName = GetFullQualifiedName(containingType);
                 sb.Append($@"
-    {interfaceMethod.ReturnType} {interfaceFullyQualifiedName}.{interfaceMethod.Name}({parameters}) 
-        => Value.{parametersNames}");
+        {interfaceMethod.ReturnType} {interfaceFullyQualifiedName}.{interfaceMethod.Name}({parameters}) 
+            => Value.{interfaceMethod.Name}({parametersNames});");
             }
 
-            sb.Append(@"
-  }
-}");
-            return sb.ToString();
+            return sb.Append($@"
+        public static {fullQualifiedName} Create(Func<{fullQualifiedName}> getter) => new {proxyName}(getter);
+  }}
+}}").ToString();
         }
 
         private static string GetFullQualifiedName(ISymbol symbol)

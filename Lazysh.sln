@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lazysh", "Lazysh\Lazysh.csproj", "{38AE3202-F0DD-4FEE-A233-82E6C2DEFB08}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Usage", "Usage\Usage.csproj", "{A3F1F033-84D1-40F9-B2D7-0A86BA9D9C5F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{38AE3202-F0DD-4FEE-A233-82E6C2DEFB08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38AE3202-F0DD-4FEE-A233-82E6C2DEFB08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38AE3202-F0DD-4FEE-A233-82E6C2DEFB08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38AE3202-F0DD-4FEE-A233-82E6C2DEFB08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3F1F033-84D1-40F9-B2D7-0A86BA9D9C5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3F1F033-84D1-40F9-B2D7-0A86BA9D9C5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3F1F033-84D1-40F9-B2D7-0A86BA9D9C5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3F1F033-84D1-40F9-B2D7-0A86BA9D9C5F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
