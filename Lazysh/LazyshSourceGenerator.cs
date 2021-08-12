@@ -1,16 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Mail;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Lazysh
-{
+namespace Lazysh {
     public class LazyshSyntaxReceiver : ISyntaxReceiver
     {
         public HashSet<TypeDeclarationSyntax> TypeDeclarationsWithAttributes { get; } = new();
@@ -90,9 +85,7 @@ namespace Lazysh
 
         private string GenerateProxy(ITypeSymbol targetType, string namespaceName)
         {
-            var allInterfaceMethods = targetType.AllInterfaces
-                .SelectMany(x => x.GetMembers())
-                .Concat(targetType.GetMembers())
+            var allInterfaceMethods = targetType.GetMembers()
                 .OfType<IMethodSymbol>()
                 .ToList();
 
@@ -102,72 +95,34 @@ namespace Lazysh
             var proxyName = $"Lazysh{targetType.Name.Substring(1)}";
             sb.Append($@"
 using System;
-using System.Text;
-using NLog;
-using System.Diagnostics;
-namespace {namespaceName}
-{{
-  public class {proxyName} : {fullQualifiedName}
-  {{
-    private readonly {fullQualifiedName} _target;
-    public {proxyName}({fullQualifiedName} target)
-      => _target = target;
-");
+using System.Threading;
 
+// generated
+class {proxyName} : Lazy<ILoaded>, ILoaded
+{{
+    public LazyLoaded(Func<ILoaded> val) :base(val)
+    {{
+    }}");
+            
             foreach (var interfaceMethod in allInterfaceMethods)
             {
                 var containingType = interfaceMethod.ContainingType;
-                var parametersList = string.Join(", ",
+                var parameters = string.Join(", ",
                     interfaceMethod.Parameters.Select(x => $"{GetFullQualifiedName(x.Type)} {x.Name}"));
+                var parametersNames = string.Join(", ", interfaceMethod.Parameters.Select(x => x.Name));
                 var argumentLog = string.Join(", ", interfaceMethod.Parameters.Select(x => $"{x.Name} = {{{x.Name}}}"));
                 var argumentList = string.Join(", ", interfaceMethod.Parameters.Select(x => x.Name));
                 var isVoid = interfaceMethod.ReturnsVoid;
                 var interfaceFullyQualifiedName = GetFullQualifiedName(containingType);
                 sb.Append($@"
-    {interfaceMethod.ReturnType} {interfaceFullyQualifiedName}.{interfaceMethod.Name}({parametersList})
-    {{
-{Log("LogLevel.Info", $"\"{interfaceMethod.Name} started...\"")}
-{Log("LogLevel.Info", $"$\"  Arguments: {argumentLog}\"")}
-      var sw = new Stopwatch();
-      sw.Start();
-      try
-      {{
-");
-
-                sb.Append("        ");
-                if (!isVoid)
-                {
-                    sb.Append("var result = ");
-                }
-
-                sb.AppendLine($"_target.{interfaceMethod.Name}({argumentList});");
-                sb.AppendLine("  " + Log("LogLevel.Info",
-                    $@"$""{interfaceMethod.Name} finished in {{sw.ElapsedMilliseconds}} ms"""));
-                if (!isVoid)
-                {
-                    sb.AppendLine("  " + Log("LogLevel.Info", "$\"Return value: {result}\""));
-                    sb.AppendLine("        return result;");
-                }
-
-                sb.Append($@"
-      }}
-      catch (Exception e)
-      {{
-  {Log("LogLevel.Error", "e.ToString()")}
-        throw;
-      }}
-    }}");
+    {interfaceMethod.ReturnType} {interfaceFullyQualifiedName}.{interfaceMethod.Name}({parameters}) 
+        => Value.{parametersNames}");
             }
 
             sb.Append(@"
   }
 }");
             return sb.ToString();
-
-            string Log(string logLevel, string message)
-            {
-                return $"      _logger.Log({logLevel}, {message});";
-            }
         }
 
         private static string GetFullQualifiedName(ISymbol symbol)
