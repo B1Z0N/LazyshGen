@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Threading;
-using LazyshImplDefault;
+using LazyshImpl;
 
 namespace Usage
 {
-    [Lazysh] // our attribute to implement interface as lazy one
     interface ILoaded 
     { 
         int DoInt(); 
@@ -31,10 +30,13 @@ namespace Usage
         public static void Main()
         {
             var loader = new Loader();
-            var lazyLoaded = LazyshLoaded.Create(() => loader.Load()); // very fast(not yet loaded)
             
-            Console.WriteLine(lazyLoaded.DoInt()); // this takes one second(loads)
-            lazyLoaded.DoVoid(); // again very fast(already loaded)
+            // var lazyLoaded = LazyshLoaded.Create(() => loader.Load()); // very fast(not yet loaded)
+            
+            //Console.WriteLine(lazyLoaded.DoInt()); // this takes one second(loads)
+            //lazyLoaded.DoVoid(); // again very fast(already loaded)
         }
-    } 
+    }
+    
+    public static partial class LazyshFactory<[Lazysh(typeof(ILoaded), typeof(IDisposable))] T> { }
 }
