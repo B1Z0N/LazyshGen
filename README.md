@@ -1,6 +1,4 @@
-# Lazysh source gen
-
-Sort of source generator test to try to achieve this:
+# Lazysh source generator
 
 See [this](Usage/Program.cs) for detailed tutorial.
 
