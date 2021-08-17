@@ -52,6 +52,7 @@ namespace Usage
     {
     }
     
+    // registering interfaces for lazysh source generation
     public static class MyLazyshFactory<[Lazysh(typeof(ILoaded), typeof(IDisposable))] T>
     {
     }
@@ -85,7 +86,6 @@ namespace Usage
             // the lazysh was not registered
             Func<IUnknown> actualUnknownGetter = () => new Unknown();
 
-
             // 1. 2. corresponding LazyshUnknown was not generated
             // UseLazyshIUnknown(() => new LazyshUnknown(actualUnknownGetter));
             // UseLazyshIUnknown(() => LazyshUnknown.Create(actualUnknownGetter)); 
@@ -105,6 +105,7 @@ namespace Usage
             //
             // another lazysh that was actually registered in MyLazyshFactory<T>
             Func<IDisposable> actualDisposableGetter = () => new MyDisposed();
+            
             // 1. get directly with specific class constructor
             UseLazyshIDisposable(() => new LazyshDisposable(actualDisposableGetter));
             // 2. get with it's static create method
