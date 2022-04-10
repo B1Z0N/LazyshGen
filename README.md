@@ -4,7 +4,7 @@ See [this](Usage/Program.cs) for detailed tutorial.
 
 # Limitations
 
-Unfortunately, as this project help me to find out, we can't be more implicit about source generation.
+Unfortunately, as this project helped me to find out, we can't be more implicit about source generation.
 Compiler can't run through all usages of LazyshFactory<ISomeInterface>, get all such interfaces and generate lazies for them on demand.
 It won't work as the C++ templates do. You should always register it with some kind of static compile-time field/attribute/declaration and so on.
 
