@@ -14,4 +14,4 @@ If you think it's possible and have some hints on how to do it(how to actually e
 
 ### THEN
 
-please contact me on kolausf@gmail.com.
+please contact [me](https://linktr.ee/b1z0n).
